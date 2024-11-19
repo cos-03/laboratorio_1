@@ -1,6 +1,6 @@
 import javax.swing.*;
 
-public class DatagramaMenuJOprion {
+public class DatagramaMenuJOption {
     public static void main(String[] args) {
         boolean exit = false;
 
@@ -41,7 +41,6 @@ public class DatagramaMenuJOprion {
         }
     }
 
-    // Opción 1: Análisis de Flags y Desplazamiento
     private static void analyzeFlagsAndOffset() {
         String hexDatagram = JOptionPane.showInputDialog("Ingrese el datagrama en formato hexadecimal (sin espacios):").replaceAll("\\s", "");
 
@@ -74,7 +73,6 @@ public class DatagramaMenuJOprion {
         JOptionPane.showMessageDialog(null, analysis.toString());
     }
 
-    // Opción 2: Fragmentar datagrama y mostrar en W16
     private static void fragmentAndDisplay() {
         try {
             int totalDatagramSize = Integer.parseInt(JOptionPane.showInputDialog("Introduce el tamaño total del datagrama (bytes, incluyendo encabezado):"));
@@ -92,16 +90,19 @@ public class DatagramaMenuJOprion {
             int maxDataPerFragment = mtu - headerSize;
             int numFragments = (int) Math.ceil((double) dataSize / maxDataPerFragment);
 
-            StringBuilder result = new StringBuilder();
-            result.append("Fragmentación del Datagrama:\n");
-            result.append("Tamaño total del datagrama: ").append(totalDatagramSize).append(" bytes\n");
-            result.append("Tamaño del encabezado: ").append(headerSize).append(" bytes\n");
-            result.append("Tamaño de los datos: ").append(dataSize).append(" bytes\n");
-            result.append("MTU de la red: ").append(mtu).append(" bytes\n");
-            result.append("Tamaño máximo de datos por fragmento: ").append(maxDataPerFragment).append(" bytes\n");
-            result.append("Número de fragmentos necesarios: ").append(numFragments).append("\n\n");
+            StringBuilder summary = new StringBuilder();
+            summary.append("Fragmentación del Datagrama:\n")
+                    .append("Tamaño total del datagrama: ").append(totalDatagramSize).append(" bytes\n")
+                    .append("Tamaño del encabezado: ").append(headerSize).append(" bytes\n")
+                    .append("Tamaño de los datos: ").append(dataSize).append(" bytes\n")
+                    .append("MTU de la red: ").append(mtu).append(" bytes\n")
+                    .append("Tamaño máximo de datos por fragmento: ").append(maxDataPerFragment).append(" bytes\n")
+                    .append("Número de fragmentos necesarios: ").append(numFragments).append("\n");
+
+            JOptionPane.showMessageDialog(null, summary.toString());
 
             String dataHex = generateDataHex(dataSize); // Datos simulados en hexadecimal
+            StringBuilder fragments = new StringBuilder();
 
             for (int i = 0; i < numFragments; i++) {
                 int start = i * maxDataPerFragment;
@@ -116,21 +117,25 @@ public class DatagramaMenuJOprion {
 
                 String fragmentHex = generateHeaderHex(headerSize) + flagsAndOffsetHex + dataHex.substring(start * 2, end * 2);
 
-                result.append("Fragmento ").append(i + 1).append(":\n");
-                result.append(" - Tamaño total: ").append(fragmentTotalSize).append(" bytes\n");
-                result.append(" - Datos [").append(start).append("-").append(end - 1).append("]\n");
-                result.append(" - Más fragmentos: ").append(moreFragments ? "Sí" : "No").append("\n");
-                result.append(" - Flags y Desplazamiento (hexadecimal): ").append(flagsAndOffsetHex).append("\n");
-                result.append(" - Datagrama completo (hexadecimal): ").append(fragmentHex).append("\n\n");
-            }
+                fragments.append("Fragmento ").append(i + 1).append(":\n")
+                        .append(" - Tamaño total: ").append(fragmentTotalSize).append(" bytes\n")
+                        .append(" - Rango de datos: [").append(start).append("-").append(end - 1).append("]\n")
+                        .append(" - Más fragmentos: ").append(moreFragments ? "Sí" : "No").append("\n")
+                        .append(" - Flags y Desplazamiento (hex): ").append(flagsAndOffsetHex).append("\n")
+                        .append(" - Datagrama (hex, resumido): ")
+                        .append(fragmentHex.substring(0, Math.min(16, fragmentHex.length())))
+                        .append("...").append(fragmentHex.substring(Math.max(fragmentHex.length() - 16, 0))).append("\n\n");
 
-            JOptionPane.showMessageDialog(null, result.toString());
+                if ((i + 1) % 3 == 0 || i == numFragments - 1) {
+                    JOptionPane.showMessageDialog(null, fragments.toString());
+                    fragments.setLength(0);
+                }
+            }
         } catch (NumberFormatException e) {
             JOptionPane.showMessageDialog(null, "Entrada inválida. Por favor, ingresa valores numéricos.");
         }
     }
 
-    // Genera un encabezado simulado en hexadecimal
     private static String generateHeaderHex(int headerSize) {
         StringBuilder header = new StringBuilder();
         for (int i = 0; i < headerSize * 2; i++) {
@@ -139,7 +144,6 @@ public class DatagramaMenuJOprion {
         return header.toString();
     }
 
-    // Genera datos simulados en hexadecimal
     private static String generateDataHex(int dataSize) {
         StringBuilder data = new StringBuilder();
         for (int i = 0; i < dataSize * 2; i++) {
